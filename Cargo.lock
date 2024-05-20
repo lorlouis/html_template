@@ -4,7 +4,7 @@ version = 3
 
 [[package]]
 name = "html_template"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "html_template_core",
  "html_template_macros",
@@ -12,11 +12,11 @@ dependencies = [
 
 [[package]]
 name = "html_template_core"
-version = "0.1.0"
+version = "0.0.1"
 
 [[package]]
 name = "html_template_macros"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "html_template_core",
 ]

@@ -31,28 +31,28 @@ fn parse_closure(items: &Group, out_string: &mut String) {
     out_string.push_str("} )),");
 }
 
-fn parse_tag(stream: &mut Peekable<impl Iterator<Item=TokenTree>>, out_string: &mut String) {
-    let mut last_token_was_punct=true;
+fn parse_tag(stream: &mut Peekable<impl Iterator<Item = TokenTree>>, out_string: &mut String) {
+    let mut last_token_was_punct = true;
     out_string.push('<');
     while let Some(token) = stream.peek() {
         match token {
             TokenTree::Punct(p) => {
-                last_token_was_punct=true;
+                last_token_was_punct = true;
                 out_string.push_str(&p.to_string());
                 let c = p.as_char();
-                if c == '>'  {
+                if c == '>' {
                     stream.next();
-                    break
+                    break;
                 }
-            },
+            }
             TokenTree::Group(g) if let Delimiter::Brace = g.delimiter() => {
                 out_string.push_str("\"#),");
                 parse_closure(g, out_string);
                 out_string.push_str("Node::Str(r#\"");
-            },
+            }
             _ => {
                 if last_token_was_punct {
-                out_string.push_str(&format!("{token}"));
+                    out_string.push_str(&format!("{token}"));
                 } else {
                     out_string.push_str(&format!(" {token}"));
                 }
@@ -63,8 +63,7 @@ fn parse_tag(stream: &mut Peekable<impl Iterator<Item=TokenTree>>, out_string: &
     }
 }
 
-fn parse_sequence(stream: &mut Peekable<impl Iterator<Item=TokenTree>>, out_string: &mut String) {
-
+fn parse_sequence(stream: &mut Peekable<impl Iterator<Item = TokenTree>>, out_string: &mut String) {
     out_string.push_str("Node::List(vec![");
 
     let mut local_string = String::new();
@@ -78,20 +77,20 @@ fn parse_sequence(stream: &mut Peekable<impl Iterator<Item=TokenTree>>, out_stri
                     local_string.clear();
                 }
                 parse_closure(&g, out_string);
-            },
+            }
             TokenTree::Literal(l) if is_string_literal(&l) => {
                 if local_string.is_empty() {
                     local_string.push_str("Node::Str(r#\"");
                 }
                 let string = l.to_string();
                 local_string.push_str(string.trim_matches(|c| c == '"'));
-            },
+            }
             TokenTree::Punct(p) if p.as_char() == '<' => {
                 if local_string.is_empty() {
                     local_string.push_str("Node::Str(r#\"");
                 }
                 parse_tag(stream, &mut local_string);
-            },
+            }
             _ => {
                 if local_string.is_empty() {
                     local_string.push_str("Node::Str(r#\"");
@@ -121,15 +120,16 @@ pub fn html(items: TokenStream) -> TokenStream {
     let mut out_string = r#"{
         use html_template::Node;
         Node::List(vec![
-    "#.to_string();
+    "#
+    .to_string();
     let mut stream = items.into_iter().peekable();
     while let Some(token) = stream.peek() {
         match token {
             TokenTree::Group(ref g) if let Delimiter::Brace = g.delimiter() => {
                 parse_closure(g, &mut out_string);
                 stream.next();
-            },
-            _ => parse_sequence(&mut stream, &mut out_string)
+            }
+            _ => parse_sequence(&mut stream, &mut out_string),
         }
     }
     out_string.push_str(r#"])}"#);
